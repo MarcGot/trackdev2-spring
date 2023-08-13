@@ -12,12 +12,21 @@ import org.udg.trackdev.spring.entity.User;
 import org.udg.trackdev.spring.configuration.UserType;
 import org.udg.trackdev.spring.repository.UserRepository;
 
+import javax.persistence.EntityManager;
+import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService extends BaseServiceUUID<User, UserRepository> {
-    
+
+    @Autowired
+    private EntityManager em;
+
     @Autowired
     private RoleService roleService;
 
@@ -26,6 +35,9 @@ public class UserService extends BaseServiceUUID<User, UserRepository> {
 
     @Autowired
     private EmailSenderService emailSenderService;
+
+    @Autowired
+    private AccessChecker accessChecker;
 
     @Autowired
     Global global;
@@ -140,4 +152,13 @@ public class UserService extends BaseServiceUUID<User, UserRepository> {
         return this.repo().findByGithubName(githubName).orElseThrow(
                 () -> new ServiceException(String.format("User with githb name = %s does not exists", githubName)));
     }
+
+    @Transactional
+    public void setLastLogin(User user) {
+        ZonedDateTime currentDateTimeSpain = ZonedDateTime.now(ZoneId.of("Europe/Madrid"));
+        LocalDateTime localDateTimeSpain = currentDateTimeSpain.toLocalDateTime();
+        user.setLastLogin(localDateTimeSpain);
+        em.persist(user);
+    }
+
 }
